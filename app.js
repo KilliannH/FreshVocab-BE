@@ -1,17 +1,35 @@
 const express = require('express');
-const app = express();
-const bodyparser = require('body-parser');
+const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const config = require('./config.js.example');
 
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || "localhost";
+const app = express();
 
 app.use(cors());
-app.use(bodyparser.json());
+
+app.use(bodyParser.json());
+
+const port = config.PORT || process.env.PORT;
+const host = config.HOST || process.env.HOST;
 
 Vocab = require('./models/vocabs');
 User = require('./models/users');
+
+const checkAuth = (req, res, next) => {
+    const token = req.get('Authorization');
+
+    if(token) {
+        jwt.verify(token, config.TOKEN_SECRET, (err, decoded) => {
+            if(decoded) {
+                next();
+            } else {
+                res.status(401).send('Unauthorized')
+            }
+        })
+    }
+}
 
 mongoose.connect('mongodb://localhost/freshvocab-db', {
     useUnifiedTopology: true,
@@ -25,8 +43,31 @@ app.get('/',(req, res) => {
     res.send('Please use /api/vocabs');
 });
 
+app.post('/login', (req, res) => {
+    var credentials = req.body;
+    User.getUserByEmail(credentials.email, (err, user) => {
+        if(err) {
+            res.status(404).send(err);
+        }
+
+        // todo - hash password before send it to db
+        if(user.password === credentials.password) {
+            jwt.sign({
+                data: {
+                    username: user.username,
+                    email: user.email,
+                }
+            },config.TOKEN_SECRET, {expiresIn: 60*60*24*7, algorithm: config.TOKEN_ALGORITHM}, (err, token) => {
+             res.json(token);
+            }); // 7 days
+        } else {
+            res.status(401).send('Unauthorized')
+        }
+    })
+});
+
 /// GET VOCABS ///
-app.get('/api/vocabs', (req, res) => {
+app.get('/api/vocabs', checkAuth, (req, res) => {
     Vocab.getVocabs((err, vocabs) => {
         if(err) {
             throw err;
@@ -36,7 +77,7 @@ app.get('/api/vocabs', (req, res) => {
 });
 
 /// GET VOCAB ///
-app.get('/api/vocabs/:_id', (req, res) => {
+app.get('/api/vocabs/:_id', checkAuth, (req, res) => {
     Vocab.getVocabById(req.params._id,(err, vocab) => {
         if(err) {
             throw err;
@@ -46,7 +87,7 @@ app.get('/api/vocabs/:_id', (req, res) => {
 });
 
 /// POST VOCAB ///
-app.post('/api/vocabs', (req, res) => {
+app.post('/api/vocabs', checkAuth, (req, res) => {
     const vocab = req.body;
     Vocab.addVocab(vocab, (err, vocab) => {
         if(err) {
@@ -58,7 +99,7 @@ app.post('/api/vocabs', (req, res) => {
 });
 
 /// PUT VOCAB ///
-app.put('/api/vocabs/:_id', (req, res) => {
+app.put('/api/vocabs/:_id', checkAuth, (req, res) => {
     const id = req.params._id;
     const vocab = req.body;
     Vocab.updateVocab(id, vocab, {}, function (err, book) {
@@ -70,7 +111,7 @@ app.put('/api/vocabs/:_id', (req, res) => {
 });
 
 /// DELETE VOCAB ///
-app.delete('/api/vocabs/:_id', (req, res) => {
+app.delete('/api/vocabs/:_id', checkAuth, (req, res) => {
     var id = req.params._id;
 
     Vocab.deleteVocab(id, (err, vocab) => {
@@ -83,7 +124,7 @@ app.delete('/api/vocabs/:_id', (req, res) => {
 });
 
 /// GET USERS ///
-app.get('/api/users', (req, res) => {
+app.get('/api/users', checkAuth, (req, res) => {
     User.getUsers((err, users) => {
         if(err) {
             throw err;
@@ -93,7 +134,7 @@ app.get('/api/users', (req, res) => {
 });
 
 /// GET USER ///
-app.get('/api/users/:_id', (req, res) => {
+app.get('/api/users/:_id', checkAuth, (req, res) => {
     User.getUserById(req.params._id,(err, user) => {
         if(err) {
             throw err;
@@ -103,7 +144,7 @@ app.get('/api/users/:_id', (req, res) => {
 });
 
 /// POST USER ///
-app.post('/api/users', (req, res) => {
+app.post('/api/users', checkAuth, (req, res) => {
     const user = req.body;
     USer.addUser(user, (err, user) => {
         if(err) {
@@ -114,7 +155,7 @@ app.post('/api/users', (req, res) => {
 });
 
 /// PUT USER ///
-app.put('/api/users/:_id', (req, res) => {
+app.put('/api/users/:_id', checkAuth, (req, res) => {
     const id = req.params._id;
     const user = req.body;
     User.updateUser(id, user, {}, function (err, book) {
@@ -126,7 +167,7 @@ app.put('/api/users/:_id', (req, res) => {
 });
 
 /// DELETE USER ///
-app.delete('/api/users/:_id', (req, res) => {
+app.delete('/api/users/:_id', checkAuth, (req, res) => {
     var id = req.params._id;
 
     User.deleteUser(id, (err, user) => {
@@ -138,6 +179,6 @@ app.delete('/api/users/:_id', (req, res) => {
 
 });
 
-app.listen(PORT, HOST, () => {
-   console.log(`Running on ${HOST}:${PORT}`);
+app.listen(port, host, () => {
+   console.log(`Running on ${host}:${port}`);
 });

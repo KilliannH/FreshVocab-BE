@@ -10,7 +10,7 @@ var usersSchema = mongoose.Schema({
       type: String,
       required: true
     },
-    authMethod: {
+    password: {
         type: String,
         required: true
     }
@@ -28,6 +28,11 @@ module.exports.getUserById = function (id, callback) {
     User.findById(id, callback)
 }
 
+// Get user by email
+module.exports.getUserByEmail = function (email, callback) {
+    User.findOne({'email': email}, callback)
+}
+
 // Add user
 module.exports.addUser = function (user, callback) {
     User.create(user, callback);
@@ -39,7 +44,7 @@ module.exports.updateUser = function (id, user, options, callback) {
     var update = {
         username: user.username,
         email: user.email,
-        authMethod: user.authMethod
+        password: user.password
     }
     User.findOneAndUpdate(query, update, options, callback);
 }
