@@ -31,6 +31,28 @@ const checkAuth = (req, res, next) => {
     }
 }
 
+const checkAdmin = (req, res, next) => {
+    const token = req.get('Authorization');
+
+    if(token) {
+        jwt.verify(token, config.TOKEN_SECRET, (err, decoded) => {
+            if(decoded) {
+                User.getUserByEmail(decoded.email, (err, user) => {
+                    if (err) {
+                        res.status(404).send(err);
+                    }
+
+                    if (user.role === 'Admin') {
+                        next();
+                    }
+                });
+            } else {
+                res.status(401).send('Unauthorized')
+            }
+        });
+    }
+}
+
 mongoose.connect('mongodb://localhost/freshvocab-db', {
     useUnifiedTopology: true,
     useNewUrlParser: true
@@ -124,7 +146,7 @@ app.delete('/api/vocabs/:_id', checkAuth, (req, res) => {
 });
 
 /// GET USERS ///
-app.get('/api/users', checkAuth, (req, res) => {
+app.get('/api/users', checkAdmin, (req, res) => {
     User.getUsers((err, users) => {
         if(err) {
             throw err;
@@ -134,7 +156,7 @@ app.get('/api/users', checkAuth, (req, res) => {
 });
 
 /// GET USER ///
-app.get('/api/users/:_id', checkAuth, (req, res) => {
+app.get('/api/users/:_id', checkAdmin, (req, res) => {
     User.getUserById(req.params._id,(err, user) => {
         if(err) {
             throw err;
@@ -144,7 +166,7 @@ app.get('/api/users/:_id', checkAuth, (req, res) => {
 });
 
 /// POST USER ///
-app.post('/api/users', checkAuth, (req, res) => {
+app.post('/api/users', checkAdmin, (req, res) => {
     const user = req.body;
     USer.addUser(user, (err, user) => {
         if(err) {
@@ -155,7 +177,7 @@ app.post('/api/users', checkAuth, (req, res) => {
 });
 
 /// PUT USER ///
-app.put('/api/users/:_id', checkAuth, (req, res) => {
+app.put('/api/users/:_id', checkAdmin, (req, res) => {
     const id = req.params._id;
     const user = req.body;
     User.updateUser(id, user, {}, function (err, book) {
@@ -167,7 +189,7 @@ app.put('/api/users/:_id', checkAuth, (req, res) => {
 });
 
 /// DELETE USER ///
-app.delete('/api/users/:_id', checkAuth, (req, res) => {
+app.delete('/api/users/:_id', checkAdmin, (req, res) => {
     var id = req.params._id;
 
     User.deleteUser(id, (err, user) => {

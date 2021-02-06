@@ -10,6 +10,10 @@ var usersSchema = mongoose.Schema({
       type: String,
       required: true
     },
+    role: {
+        type: String,
+        required: true
+    },
     password: {
         type: String,
         required: true
@@ -44,6 +48,7 @@ module.exports.updateUser = function (id, user, options, callback) {
     var update = {
         username: user.username,
         email: user.email,
+        role: user.role,
         password: user.password
     }
     User.findOneAndUpdate(query, update, options, callback);
