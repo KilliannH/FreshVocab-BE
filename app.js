@@ -20,8 +20,7 @@ Vocab = require('./models/vocabs');
 User = require('./models/users');
 
 const checkAuth = (req, res, next) => {
-    const token = req.get('Authorization');
-    console.log(token);
+    const token = req.get('Authorization').split('Bearer ')[1];
 
     if(token) {
         jwt.verify(token, config.TOKEN_SECRET, (err, decoded) => {
@@ -31,8 +30,9 @@ const checkAuth = (req, res, next) => {
                 res.status(401).json({success: false, message: 'Unauthorized'})
             }
         });
+    } else {
+        res.status(400).json({success: false, message: 'Bad Request'});
     }
-    res.status(400).json({success: false, message: 'Bad Request'});
 }
 
 const checkAdmin = (req, res, next) => {
@@ -90,14 +90,14 @@ app.post('/login', (req, res) => {
                     username: user.username,
                     email: user.email
                 }, config.TOKEN_SECRET, {
-                    expiresIn: 60 * 60 * 24 * 7,
+                    expiresIn: 60 * 60 * 24 * 7, // 7 days
                     algorithm: config.TOKEN_ALGORITHM
                 }, (err, token) => {
                     if(err) {
                         res.status(500).json({success: false, message: "Internal Server Error"});
                     }
-                    res.json({success: true, token: token});
-                }); // 7 days
+                    res.json({success: true, token: token.replace(/^/, 'Bearer ')});
+                });
             } else {
                 res.status(401).json({success: false, message: 'Unauthorized'});
             }
@@ -111,6 +111,7 @@ app.post('/login', (req, res) => {
 app.get('/api/vocabs', checkAuth, (req, res) => {
     Vocab.getVocabs((err, vocabs) => {
         if(err) {
+            console.log("eeeee", err);
             res.status(404).json({success: false, message: "Not Found"});
         }
         res.json({success: true, vocabs: vocabs});
@@ -133,8 +134,9 @@ app.post('/api/vocabs', checkAuth, (req, res) => {
     Vocab.addVocab(vocab, (err, vocab) => {
         if(err) {
             res.status(500).json({success: false, message: "Internal Server Error"});
+        } else {
+            res.json({success: true, vocab: vocab});
         }
-        res.json({success: true, vocab: vocab});
     });
 
 });
@@ -143,11 +145,12 @@ app.post('/api/vocabs', checkAuth, (req, res) => {
 app.put('/api/vocabs/:_id', checkAuth, (req, res) => {
     const id = req.params._id;
     const vocab = req.body;
-    Vocab.updateVocab(id, vocab, {}, function (err, book) {
+    Vocab.updateVocab(id, vocab, {}, function (err, updtVocab) {
         if(err) {
             res.status(500).json({success: false, message: "Internal Server Error"});
+        } else {
+            res.json({success: true, vocab: updtVocab});
         }
-        res.json({success: true, vocab: vocab});
     });
 });
 
@@ -158,8 +161,9 @@ app.delete('/api/vocabs/:_id', checkAuth, (req, res) => {
     Vocab.deleteVocab(id, (err, vocab) => {
         if(err) {
             res.status(404).json({success: false, message: "Not Found"});
+        } else {
+            res.json({success: true, vocab: vocab._id});
         }
-        res.json({success: true, vocab: vocab._id});
     });
 
 });
@@ -169,8 +173,9 @@ app.get('/api/users', checkAdmin, (req, res) => {
     User.getUsers((err, users) => {
         if(err) {
             res.status(404).json({success: false, message: "Not Found"});
+        } else {
+            res.json({success: true, users: users});
         }
-        res.json({success: true, users: users});
     });
 });
 
@@ -179,8 +184,9 @@ app.get('/api/users/:_id', checkAdmin, (req, res) => {
     User.getUserById(req.params._id,(err, user) => {
         if(err) {
             res.status(404).json({success: false, message: "Not Found"});
+        } else {
+            res.json({success: true, user: user});
         }
-        res.json({success: true, user: user});
     });
 });
 
@@ -190,8 +196,9 @@ app.post('/api/users', checkAdmin, (req, res) => {
     User.addUser(user, (err, user) => {
         if(err) {
             res.status(500).json({success: false, message: "Internal Server Error"});
+        } else {
+            res.json({success: true, user: user});
         }
-        res.json({success: true, user: user});
     });
 });
 
@@ -199,11 +206,12 @@ app.post('/api/users', checkAdmin, (req, res) => {
 app.put('/api/users/:_id', checkAdmin, (req, res) => {
     const id = req.params._id;
     const user = req.body;
-    User.updateUser(id, user, {}, function (err, book) {
+    User.updateUser(id, user, {}, function (err, updtUser) {
         if(err) {
             res.status(404).json({success: false, message: "Not Found"});
+        } else {
+            res.json({success: true, user: updtUser});
         }
-        res.json({success: true, user: user});
     });
 });
 
@@ -214,8 +222,9 @@ app.delete('/api/users/:_id', checkAdmin, (req, res) => {
     User.deleteUser(id, (err, user) => {
         if(err) {
             res.status(404).json({success: false, message: "Not Found"});
+        } else {
+            res.json({success: true, user: user._id});
         }
-        res.json({success: true, user: user._id});
     });
 
 });
