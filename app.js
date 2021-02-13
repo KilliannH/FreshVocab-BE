@@ -59,7 +59,7 @@ const checkAdmin = (req, res, next) => {
     res.status(400).json({success: false, message: 'Bad Request'});
 }
 
-mongoose.connect('mongodb://localhost/freshvocab-db', {
+mongoose.connect('mongodb://' + config.HOST + '/' + config.DB_NAME, {
     useUnifiedTopology: true,
     useNewUrlParser: true
 }, () => {

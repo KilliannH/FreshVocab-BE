@@ -1,6 +1,7 @@
 module.exports = {
     PORT: 'myPort',
     HOST: 'myHost',
+    DB_NAME: 'my-db-name',
     TOKEN_SECRET: 'my-secret',
     TOKEN_ALGORITHM: 'my-algorithm',
     HMAC_KEY: 'secret'
