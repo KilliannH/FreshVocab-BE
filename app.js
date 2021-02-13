@@ -9,6 +9,7 @@ const config = require('./config.js');
 
 const app = express();
 
+app.use(express.static(__dirname + '/client'));
 app.use(cors());
 
 app.use(bodyParser.json());
@@ -67,7 +68,7 @@ mongoose.connect('mongodb://localhost/freshvocab-db', {
 
 /// DEFAULT GET ///
 app.get('/',(req, res) => {
-    res.status(404).json({success: false, message:'Not Found'});
+    res.send("/index.html");
 });
 
 app.post('/login', (req, res) => {
@@ -111,7 +112,6 @@ app.post('/login', (req, res) => {
 app.get('/api/vocabs', checkAuth, (req, res) => {
     Vocab.getVocabs((err, vocabs) => {
         if(err) {
-            console.log("eeeee", err);
             res.status(404).json({success: false, message: "Not Found"});
         }
         res.json({success: true, vocabs: vocabs});
