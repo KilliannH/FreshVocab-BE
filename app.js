@@ -59,7 +59,7 @@ const checkAdmin = (req, res, next) => {
     res.status(400).json({success: false, message: 'Bad Request'});
 }
 
-mongoose.connect('mongodb://' + config.HOST + '/' + config.DB_NAME, {
+mongoose.connect('mongodb://localhost/' + config.DB_NAME, {
     useUnifiedTopology: true,
     useNewUrlParser: true
 }, () => {
