@@ -73,7 +73,7 @@ app.get('/',(req, res) => {
 
 app.post('/login', (req, res) => {
     const credentials = req.body;
-    if(credentials.email && credentials.password) {
+    if(credentials && (credentials.email && credentials.password)) {
         User.getUserByEmail(credentials.email, (err, user) => {
             if (err) {
                 res.status(404).json({success: false, message: 'Not Found'});
