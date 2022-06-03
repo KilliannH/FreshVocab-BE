@@ -9,7 +9,6 @@ const config = require('./config.js');
 
 const app = express();
 
-app.use(express.static(__dirname + '/client'));
 app.use(cors());
 
 app.use(bodyParser.json());
@@ -67,11 +66,8 @@ mongoose.connect('mongodb://localhost/' + config.DB_NAME, {
 });
 
 /// DEFAULT GET ///
-app.get('/',(req, res) => {
-    res.send("/index.html");
-});
 
-app.post('/login', (req, res) => {
+app.post('/api/login', (req, res) => {
     const credentials = req.body;
     if(credentials.email && credentials.password) {
         User.getUserByEmail(credentials.email, (err, user) => {
@@ -118,7 +114,7 @@ app.get('/api/vocabs', checkAuth, (req, res) => {
     });
 });
 
-/// GET VOCAB ///
+/// GET VOCAB BY ID ///
 app.get('/api/vocabs/:_id', checkAuth, (req, res) => {
     Vocab.getVocabById(req.params._id,(err, vocab) => {
         if(err) {
@@ -154,7 +150,7 @@ app.put('/api/vocabs/:_id', checkAuth, (req, res) => {
     });
 });
 
-/// DELETE VOCAB ///
+/// DELETE VOCAB BY ID ///
 app.delete('/api/vocabs/:_id', checkAuth, (req, res) => {
     var id = req.params._id;
 
@@ -179,7 +175,7 @@ app.get('/api/users', checkAdmin, (req, res) => {
     });
 });
 
-/// GET USER ///
+/// GET USER BY ID ///
 app.get('/api/users/:_id', checkAdmin, (req, res) => {
     User.getUserById(req.params._id,(err, user) => {
         if(err) {
@@ -215,7 +211,7 @@ app.put('/api/users/:_id', checkAdmin, (req, res) => {
     });
 });
 
-/// DELETE USER ///
+/// DELETE USER BY ID ///
 app.delete('/api/users/:_id', checkAdmin, (req, res) => {
     var id = req.params._id;
 
