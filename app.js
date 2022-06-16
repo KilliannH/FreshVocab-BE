@@ -104,6 +104,22 @@ app.post('/api/login', (req, res) => {
     }
 });
 
+app.post('/api/decode', (req, res) => {
+    let token = req.body.token;
+    let decoded
+    if(token) {
+        try {
+            token = token.split('Bearer ')[1];
+            decoded = jwt.decode(token);
+        } catch (e) {
+            res.status(500).json({success: false, message: "Internal server error"});
+        }
+        res.json({success: true, decoded: decoded});
+    } else {
+        res.status(400).send('Bad Request');
+    }
+});
+
 /// GET VOCABS ///
 app.get('/api/vocabs', checkAuth, (req, res) => {
     Vocab.getVocabs((err, vocabs) => {
