@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 const port = config.PORT || process.env.PORT;
 const host = config.HOST || process.env.HOST;
 
-Vocab = require('./models/vocabs');
+Vocab = require('./models/vocab');
 User = require('./models/users');
 
 const checkAuth = (req, res, next) => {
@@ -93,7 +93,14 @@ app.post('/api/login', (req, res) => {
                     if(err) {
                         res.status(500).json({success: false, message: "Internal Server Error"});
                     }
-                    res.json({success: true, token: token.replace(/^/, 'Bearer ')});
+                    const decoded = jwt.decode(token);
+                    res.json({
+                        success: true,
+                        data: {
+                            token: token.replace(/^/, 'Bearer '),
+                            decoded: decoded
+                        }
+                    });
                 });
             } else {
                 res.status(401).json({success: false, message: 'Unauthorized'});
@@ -111,6 +118,8 @@ app.post('/api/decode', (req, res) => {
         try {
             token = token.split('Bearer ')[1];
             decoded = jwt.decode(token);
+            // todo - need to validate all user data here
+            // why ? bcse we need to invalidate token if the user has changed his email / username
         } catch (e) {
             res.status(500).json({success: false, message: "Internal server error"});
         }
@@ -121,17 +130,17 @@ app.post('/api/decode', (req, res) => {
 });
 
 /// GET VOCABS ///
-app.get('/api/vocabs', checkAuth, (req, res) => {
+app.get('/api/vocab', checkAuth, (req, res) => {
     Vocab.getVocabs((err, vocabs) => {
         if(err) {
             res.status(404).json({success: false, message: "Not Found"});
         }
-        res.json({success: true, vocabs: vocabs});
+        res.json({success: true, vocab: vocabs});
     });
 });
 
 /// GET VOCAB BY ID ///
-app.get('/api/vocabs/:_id', checkAuth, (req, res) => {
+app.get('/api/vocab/:_id', checkAuth, (req, res) => {
     Vocab.getVocabById(req.params._id,(err, vocab) => {
         if(err) {
             res.status(404).json({success: false, message: "Not Found"});
@@ -141,7 +150,7 @@ app.get('/api/vocabs/:_id', checkAuth, (req, res) => {
 });
 
 /// POST VOCAB ///
-app.post('/api/vocabs', checkAuth, (req, res) => {
+app.post('/api/vocab', checkAuth, (req, res) => {
     const vocab = req.body;
     Vocab.addVocab(vocab, (err, vocab) => {
         if(err) {
@@ -154,7 +163,7 @@ app.post('/api/vocabs', checkAuth, (req, res) => {
 });
 
 /// PUT VOCAB ///
-app.put('/api/vocabs/:_id', checkAuth, (req, res) => {
+app.put('/api/vocab/:_id', checkAuth, (req, res) => {
     const id = req.params._id;
     const vocab = req.body;
     Vocab.updateVocab(id, vocab, {}, function (err, updtVocab) {
@@ -167,7 +176,7 @@ app.put('/api/vocabs/:_id', checkAuth, (req, res) => {
 });
 
 /// DELETE VOCAB BY ID ///
-app.delete('/api/vocabs/:_id', checkAuth, (req, res) => {
+app.delete('/api/vocab/:_id', checkAuth, (req, res) => {
     var id = req.params._id;
 
     Vocab.deleteVocab(id, (err, vocab) => {

@@ -1,6 +1,17 @@
 var mongoose = require('mongoose');
 
 //Vocabs Schema
+/*
+partOfSpeech: {
+ 1: "Noun",
+ 2: "Pronoun",
+ 3: "Verb",
+ 4: "Adjective",
+ 5: "Adverb",
+ 6: "Preposition",
+ 7: "Conjunction",
+ 8: "Interjection"
+} */
 var vocabsSchema = mongoose.Schema({
     word: {
         type: String,
@@ -10,6 +21,10 @@ var vocabsSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    partOfSpeech: {
+        type: Number,
+        required: true
+    }
 });
 
 Vocab = module.exports = mongoose.model('Vocabs', vocabsSchema);
